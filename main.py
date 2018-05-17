@@ -2,6 +2,20 @@ import itertools
 import pandas as pd
 import numpy as np
 
+def proba2survive(df, total_monsters, removed, dungeon):
+
+    df['total_monsters'] = df[df.columns[:13]].sum(1)
+
+    mask = np.ones(df.shape[0], dtype=bool)
+    for c in dungeon:
+        mask &= df[c] == 1
+
+    for c in removed:
+        mask &= df[c] == 0
+
+    mask &= df.total_monsters == total_monsters
+
+    return df[mask].survived.sum() / mask.sum()
 
 class Monster(object):
 
@@ -106,33 +120,33 @@ class MarteloGollem(ReusableItem):
   def activate(self, monster):
     return monster.demage == 5
 
+if __name__ == '__main__':
+  monsters_demages = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7, 9]
+  monsters = np.array([Monster('', '', demage) for demage in monsters_demages])
+  print(monsters)
 
-monsters_demages = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7]
-monsters = np.array([Monster('', '', demage) for demage in monsters_demages])
-print(monsters)
+  items = [Potion(), Armor(4), Armor(3), Torche(), MarteloGollem(), Machado()]
+  Barbare = Hero('', 'Barbare', 4, items)
 
-items = [Potion(), Armor(4), Armor(3), Torche(), MarteloGollem(), Machado()]
-Barbare = Hero('', 'Barbare', 4, items)
+  print(items)
 
-print(items)
-
-d = Dungeon()
-result = d.enter(Barbare, monsters)
-print(result)
-#[]
-
-
-possibilities = itertools.product('01', repeat=len(items) + len(monsters))
-arr = []
-for i in possibilities:
-   i = np.array(list(map(int, i)), dtype=bool)
-   if i[:len(monsters)].sum() == 0:
-      continue
-   result = Dungeon().enter(Hero('', 'Barbare', 4, [item for item, ii in zip(items, list(i[len(monsters):])) if ii]), monsters[i[:len(monsters)]])
-   arr.append(list(i) + [result])
+  d = Dungeon()
+  result = d.enter(Barbare, monsters)
+  print(result)
+  #[]
 
 
-df = pd.DataFrame(arr, dtype=int,
-             columns=list(monsters_demages) + ['potion', 'armor1', 'armor2', 'torche', 'martello', 'machado', 'survived'])
+  possibilities = itertools.product('01', repeat=len(items) + len(monsters))
+  arr = []
+  for i in possibilities:
+     i = np.array(list(map(int, i)), dtype=bool)
+     if i[:len(monsters)].sum() == 0:
+        continue
+     result = Dungeon().enter(Hero('', 'Barbare', 4, [item for item, ii in zip(items, list(i[len(monsters):])) if ii]), monsters[i[:len(monsters)]])
+     arr.append(list(i) + [result])
 
-df.to_csv("barbare.csv", index=False)
+
+  df = pd.DataFrame(arr, dtype=int,
+               columns=list(monsters_demages) + ['potion', 'armor1', 'armor2', 'torche', 'martello', 'machado', 'survived'])
+
+  df.to_csv("barbare.csv", index=False)
