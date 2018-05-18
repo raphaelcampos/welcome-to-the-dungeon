@@ -2,7 +2,7 @@ import itertools
 import pandas as pd
 import numpy as np
 
-def proba2survive(df, total_monsters, removed, dungeon):
+def proba2survive(df, total_monsters, removed, dungeon, items_removed, items_init):
 
     df['total_monsters'] = df[df.columns[:13]].sum(1)
 
@@ -10,7 +10,13 @@ def proba2survive(df, total_monsters, removed, dungeon):
     for c in dungeon:
         mask &= df[c] == 1
 
+    for c in items_init - items_removed:
+        mask &= df[c] == 1
+
     for c in removed:
+        mask &= df[c] == 0
+
+    for c in items_removed:
         mask &= df[c] == 0
 
     mask &= df.total_monsters == total_monsters
